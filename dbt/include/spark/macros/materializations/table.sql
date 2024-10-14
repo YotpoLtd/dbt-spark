@@ -41,6 +41,8 @@
 
   {% do persist_constraints(target_relation, model) %}
 
+  {% do optimize(target_relation) %}
+
   {{ run_hooks(post_hooks) }}
 
   {{ return({'relations': [target_relation]})}}
@@ -98,8 +100,49 @@ else:
   msg = f"{type(df)} is not a supported type for dbt Python materialization"
   raise Exception(msg)
 
-df.write.mode("overwrite").format("{{ config.get('file_format', 'delta') }}").option("overwriteSchema", "true").saveAsTable("{{ target_relation }}")
+writer = (
+    df.write
+        .mode("overwrite")
+        .option("overwriteSchema", "true")
+{{ py_get_writer_options()|indent(8, True) }}
+)
+writer.saveAsTable("{{ target_relation }}")
 {%- endmacro -%}
+
+{%- macro py_get_writer_options() -%}
+{%- set location_root = config.get('location_root', validator=validation.any[basestring]) -%}
+{%- set file_format = config.get('file_format', validator=validation.any[basestring])|default('delta', true) -%}
+{%- set partition_by = config.get('partition_by', validator=validation.any[list, basestring]) -%}
+{%- set liquid_clustered_by = config.get('liquid_clustered_by', validator=validation.any[list, basestring]) -%}
+{%- set clustered_by = config.get('clustered_by', validator=validation.any[list, basestring]) -%}
+{%- set buckets = config.get('buckets', validator=validation.any[int]) -%}
+.format("{{ file_format }}")
+{%- if location_root is not none %}
+{%- set identifier = model['alias'] %}
+{%- if is_incremental() %}
+{%- set identifier = identifier + '__dbt_tmp' %}
+{%- endif %}
+.option("path", "{{ location_root }}/{{ identifier }}")
+{%- endif -%}
+{%- if partition_by is not none -%}
+    {%- if partition_by is string -%}
+        {%- set partition_by = [partition_by] -%}
+    {%- endif %}
+.partitionBy({{ partition_by }})
+{%- endif -%}
+{%- if liquid_clustered_by and not is_incremental() -%}
+    {%- if liquid_clustered_by is string -%}
+        {%- set liquid_clustered_by = [liquid_clustered_by] -%}
+    {%- endif %}
+.clusterBy({{ liquid_clustered_by }})
+{%- endif -%}
+{%- if (clustered_by is not none) and (buckets is not none) -%}
+    {%- if clustered_by is string -%}
+        {%- set clustered_by = [clustered_by] -%}
+    {%- endif %}
+.bucketBy({{ buckets }}, {{ clustered_by }})
+{%- endif -%}
+{% endmacro -%}
 
 {%macro py_script_comment()%}
 # how to execute python model in notebook
