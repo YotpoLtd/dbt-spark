@@ -40,7 +40,7 @@
   {% do persist_docs(target_relation, model) %}
 
   {% do persist_constraints(target_relation, model) %}
-
+  {# taken from dbt-databricks - https://github.com/databricks/dbt-databricks/blob/main/dbt/include/databricks/macros/materializations/table.sql#L41 #}
   {% do optimize(target_relation) %}
 
   {{ run_hooks(post_hooks) }}
@@ -99,7 +99,7 @@ elif pandas_available and isinstance(df, pandas.core.frame.DataFrame):
 else:
   msg = f"{type(df)} is not a supported type for dbt Python materialization"
   raise Exception(msg)
-
+{# taken from dbt-databricks  - https://github.com/databricks/dbt-databricks/blob/main/dbt/include/databricks/macros/adapters/python.sql#L46 #}
 writer = (
     df.write
         .mode("overwrite")

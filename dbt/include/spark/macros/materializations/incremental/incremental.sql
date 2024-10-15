@@ -14,6 +14,7 @@
   {%- set language = model['language'] -%}
   {%- set on_schema_change = incremental_validate_on_schema_change(config.get('on_schema_change'), default='ignore') -%}
   {%- set incremental_predicates = config.get('predicates', none) or config.get('incremental_predicates', none) -%}
+  {# taken from dbt-databricks -  https://github.com/databricks/dbt-databricks/blob/main/dbt/include/databricks/macros/materializations/incremental/incremental.sql#L20#}
   {%- set target_relation = this.incorporate(type='table') -%}
   {%- set existing_relation = load_relation(this) -%}
   {% set tmp_relation = this.incorporate(path = {"identifier": this.identifier ~ '__dbt_tmp'}) -%}
@@ -72,12 +73,13 @@
       {%- endcall %}
     {%- endif -%}
   {%- endif -%}
+  {# taken from dbt-databricks - https://github.com/databricks/dbt-databricks/blob/main/dbt/include/databricks/macros/materializations/incremental/incremental.sql#L106 #}
   {% do apply_liquid_clustered_cols(target_relation) %}
   {% set should_revoke = should_revoke(existing_relation, full_refresh_mode) %}
   {% do apply_grants(target_relation, grant_config, should_revoke) %}
 
   {% do persist_docs(target_relation, model) %}
-
+  {#  taken from dbt-databricks - https://github.com/databricks/dbt-databricks/blob/main/dbt/include/databricks/macros/materializations/incremental/incremental.sql#L122#}
   {% do optimize(target_relation) %}
   
   {{ run_hooks(post_hooks) }}

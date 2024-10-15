@@ -1,3 +1,4 @@
+{# taken from dbt-databricks - https://github.com/databricks/dbt-databricks/blob/main/dbt/include/databricks/macros/relations/optimize.sql #}
 {% macro optimize(relation) %}
   {{ return(adapter.dispatch('optimize', 'dbt')(relation)) }}
 {% endmacro %}
