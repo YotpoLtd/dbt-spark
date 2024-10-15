@@ -433,6 +433,7 @@
 
 {% endmacro %}
 
+{# taken from dbt-databricks  - https://github.com/databricks/dbt-databricks/blob/main/dbt/include/databricks/macros/relations/liquid_clustering.sql #}
 {% macro liquid_clustered_cols() -%}
   {%- set cols = config.get('liquid_clustered_by', validator=validation.any[list, basestring]) -%}
   {%- if cols is not none %}
@@ -442,7 +443,6 @@
     CLUSTER BY ({{ cols | join(', ') }})
   {%- endif %}
 {%- endmacro -%}
-{# taken from dbt-databricks  - https://github.com/databricks/dbt-databricks/blob/main/dbt/include/databricks/macros/relations/liquid_clustering.sql #}
 {% macro apply_liquid_clustered_cols(target_relation) -%}
   {%- set cols = config.get('liquid_clustered_by', validator=validation.any[list, basestring]) -%}
   {%- if cols is not none %}
