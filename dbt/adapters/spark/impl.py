@@ -75,6 +75,8 @@ class SparkConfig(AdapterConfig):
     location_root: Optional[str] = None
     partition_by: Optional[Union[List[str], str]] = None
     clustered_by: Optional[Union[List[str], str]] = None
+    # The following is taken from dbt-databricks - https://github.com/databricks/dbt-databricks/blob/main/dbt/adapters/databricks/impl.py#L100
+    liquid_clustered_by: Optional[Union[List[str], str]] = None
     buckets: Optional[int] = None
     options: Optional[Dict[str, str]] = None
     merge_update_columns: Optional[str] = None
